@@ -11,6 +11,7 @@ main = defaultMain tests
 tests :: [Test]
 tests =
   [ testGroup "ProgramRep" [
-    testProperty "prop_id" prop_id
+    testProperty "prop_id" prop_id,
+    testProperty "prop_apply_count" prop_apply_count
     ]
   ]
