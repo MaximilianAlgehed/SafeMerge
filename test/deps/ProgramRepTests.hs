@@ -41,7 +41,7 @@ instance Arbitrary (Statement NoHole) where
                    , SIf  <$> arbitrary <*> go (d `div` 2) <*> go (d `div` 2)
                    , SWhile <$> arbitrary <*> go (d `div` 2) ]
 
-instance Arbitrary (Statement Hole) where
+instance Arbitrary (Statement MaybeHole) where
   arbitrary = sized go
     where
       go d = case d of
@@ -55,5 +55,5 @@ instance Arbitrary (Statement Hole) where
 prop_id :: Statement NoHole -> Edit -> Bool
 prop_id s delta = apply s delta == Just (s, delta)
 
-prop_apply_count :: Statement Hole -> Property
+prop_apply_count :: Statement MaybeHole -> Property
 prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (apply s delta)
