@@ -2,8 +2,8 @@
 module ProgramRep where
 
 data HasHole where
-  Hole   :: HasHole
-  NoHole :: HasHole
+  MaybeHole :: HasHole
+  NoHole    :: HasHole
 
 data Variable = Name String deriving Eq
 
@@ -49,7 +49,7 @@ instance Show AtomicStatement where
     WriteArray v e0 e1 -> show v ++ "[" ++ show e0 ++ "] := " ++ show e1
 
 data Statement :: HasHole -> * where 
-  SHole  :: Statement Hole
+  SHole  :: Statement MaybeHole
   SAtom  :: AtomicStatement -> Statement h
   SSeq   :: Statement h     -> Statement h -> Statement h
   SIf    :: Condition       -> Statement h -> Statement h -> Statement h
@@ -100,7 +100,7 @@ applyEdit s delta = do
   (s', []) <- apply s delta
   return s'
 
-numHoles :: Statement Hole -> Int
+numHoles :: Statement h -> Int
 numHoles s = case s of
   SHole       -> 1
   SAtom a     -> 0
