@@ -1,2 +1,16 @@
+import Test.Framework (defaultMain, testGroup, Test)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+
+import Test.QuickCheck
+
+import ProgramRepTests
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = defaultMain tests
+
+tests :: [Test]
+tests =
+  [ testGroup "ProgramRep" [
+    testProperty "prop_id" prop_id
+    ]
+  ]
