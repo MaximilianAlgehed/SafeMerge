@@ -56,4 +56,4 @@ prop_id :: Statement NoHole -> Edit -> Bool
 prop_id s delta = apply s delta == Just (s, delta)
 
 prop_apply_count :: Statement MaybeHole -> Property
-prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (apply s delta)
+prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (applyEdit s delta)
