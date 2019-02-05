@@ -22,6 +22,7 @@ instance Show Expr where
     Lit i     -> show i
     e0 :+: e1 -> show e0 ++ " + " ++ show e1
 
+-- | `while` and `if` statement conditions.
 data Condition where
   (:&&:) :: Condition -> Condition -> Condition
   (:>:)  :: Expr      -> Expr      -> Condition
@@ -48,6 +49,8 @@ instance Show AtomicStatement where
     v := e             -> show v ++ " := " ++ show e
     WriteArray v e0 e1 -> show v ++ "[" ++ show e0 ++ "] := " ++ show e1
 
+-- | Statements parameterised by an index telling us if they
+-- may contain a hole or not
 data Statement :: HasHole -> * where 
   SHole  :: Statement MaybeHole
   SAtom  :: AtomicStatement -> Statement h
@@ -74,6 +77,8 @@ instance Show (Statement h) where
 
 type Edit = [Statement NoHole]
 
+-- | Apply an Edit `delta` by sequentially inserting the statements
+-- of `delta` into the holes in the statement
 apply :: Statement h -> Edit -> Maybe (Statement NoHole, Edit)
 -- [.]
 apply SHole (s : delta)  = return (s, delta)
@@ -95,6 +100,8 @@ apply (SWhile c s) delta = do
   return (SWhile c s', delta1)
 apply _ _ = Nothing
 
+-- | Apply an Edit and ensure that all the statements in the edit
+-- were used in the statement
 applyEdit :: Statement h -> Edit -> Maybe (Statement NoHole)
 applyEdit s delta = do
   (s', []) <- apply s delta
