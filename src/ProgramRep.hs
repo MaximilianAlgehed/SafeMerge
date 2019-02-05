@@ -1,27 +1,52 @@
-{-# LANGUAGE DataKinds, GADTs, KindSignatures #-}
+{-# LANGUAGE DataKinds, GADTs, KindSignatures, StandaloneDeriving #-}
 module ProgramRep where
 
 data HasHole where
   Hole   :: HasHole
   NoHole :: HasHole
 
-data Variable = Name String
+data Variable = Name String deriving Eq
+
+instance Show Variable where
+  show (Name s) = s
 
 data Expr where
   Var   :: Variable -> Expr
   Lit   :: Int      -> Expr
   (:+:) :: Expr     -> Expr -> Expr
+  deriving Eq
+
+instance Show Expr where
+  show e = case e of
+    Var v     -> show v
+    Lit i     -> show i
+    e0 :+: e1 -> show e0 ++ " + " ++ show e1
 
 data Condition where
   (:&&:) :: Condition -> Condition -> Condition
   (:>:)  :: Expr      -> Expr      -> Condition
   (:==:) :: Expr      -> Expr      -> Condition
   CNot   :: Condition -> Condition
+  deriving Eq
+
+instance Show Condition where
+  show c = case c of
+    c0 :&&: c1 -> show c0 ++ " & " ++ show c1
+    e0 :>: e1  -> show e0 ++ " > " ++ show e1
+    e0 :==: e1 -> show e0 ++ " == " ++ show e1
+    CNot c     -> "!(" ++ show c ++ ")"
 
 data AtomicStatement where
   Skip       :: AtomicStatement
   (:=)       :: Variable -> Expr -> AtomicStatement
   WriteArray :: Variable -> Expr -> Expr -> AtomicStatement
+  deriving Eq
+
+instance Show AtomicStatement where
+  show a = case a of
+    Skip               -> "skip"
+    v := e             -> show v ++ " := " ++ show e
+    WriteArray v e0 e1 -> show v ++ "[" ++ show e0 ++ "] := " ++ show e1
 
 data Statement :: HasHole -> * where 
   SHole  :: Statement Hole
@@ -29,7 +54,24 @@ data Statement :: HasHole -> * where
   SSeq   :: Statement h     -> Statement h -> Statement h
   SIf    :: Condition       -> Statement h -> Statement h -> Statement h
   SWhile :: Condition       -> Statement h -> Statement h
-  
+
+deriving instance Eq (Statement h)
+
+instance Show (Statement h) where
+  show = unlines . showL 
+    where
+    showL :: Statement h -> [String]
+    showL s = case s of
+      SHole   -> ["[.]"]
+      SAtom a -> [show a]
+      SSeq s0 s1 -> showL s0 ++ showL s1
+      SIf c t f  -> ["if(" ++ show c ++ ")"]
+                 ++ map ("  "++) (showL t)
+                 ++ ["else"]
+                 ++ map ("  "++) (showL f)
+      SWhile c l -> ["while(" ++ show c ++ ")"]
+                 ++ map ("  "++) (showL l)
+
 type Edit = [Statement NoHole]
 
 apply :: Statement h -> Edit -> Maybe (Statement NoHole, Edit)
