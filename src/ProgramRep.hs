@@ -99,3 +99,11 @@ applyEdit :: Statement h -> Edit -> Maybe (Statement NoHole)
 applyEdit s delta = do
   (s', []) <- apply s delta
   return s'
+
+numHoles :: Statement Hole -> Int
+numHoles s = case s of
+  SHole       -> 1
+  SAtom a     -> 0
+  SSeq s0 s1  -> numHoles s0 + numHoles s1
+  SIf c s0 s1 -> numHoles s0 + numHoles s1
+  SWhile c s  -> numHoles s

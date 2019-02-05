@@ -2,6 +2,7 @@
 module ProgramRepTests where
 
 import Test.QuickCheck
+import Data.Maybe
 
 import ProgramRep
 
@@ -53,3 +54,6 @@ instance Arbitrary (Statement Hole) where
 
 prop_id :: Statement NoHole -> Edit -> Bool
 prop_id s delta = apply s delta == Just (s, delta)
+
+prop_apply_count :: Statement Hole -> Property
+prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (apply s delta)
