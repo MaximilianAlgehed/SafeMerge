@@ -5,7 +5,7 @@ data HasHole where
   MaybeHole :: HasHole
   NoHole    :: HasHole
 
-data Variable = Name String deriving Eq
+data Variable = Name String deriving (Eq, Ord)
 
 instance Show Variable where
   show (Name s) = s
