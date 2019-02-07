@@ -40,14 +40,12 @@ instance Show Condition where
 data AtomicStatement where
   Skip       :: AtomicStatement
   (:=)       :: Variable -> Expr -> AtomicStatement
-  WriteArray :: Variable -> Expr -> Expr -> AtomicStatement
   deriving Eq
 
 instance Show AtomicStatement where
   show a = case a of
     Skip               -> "skip"
     v := e             -> show v ++ " := " ++ show e
-    WriteArray v e0 e1 -> show v ++ "[" ++ show e0 ++ "] := " ++ show e1
 
 -- | Statements parameterised by an index telling us if they
 -- may contain a hole or not

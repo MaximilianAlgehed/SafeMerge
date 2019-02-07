@@ -51,14 +51,11 @@ instance Arbitrary Condition where
 
 instance Arbitrary AtomicStatement where
   arbitrary = oneof [ return Skip
-                    , (:=) <$> arbitrary <*> arbitrary
-                    , WriteArray <$> arbitrary <*> arbitrary <*> arbitrary ]
+                    , (:=) <$> arbitrary <*> arbitrary ]
 
   shrink a = case a of
     Skip               -> []
     v := e             -> (v :=) <$> shrink e
-    WriteArray v e0 e1 -> (WriteArray v e0 <$> shrink e1)
-                       ++ ((\e -> WriteArray v e e1) <$> shrink e0)
 
 shrinkStmt :: Arbitrary (Statement h) => Statement h -> [Statement h]
 shrinkStmt s = case s of
