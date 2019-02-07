@@ -94,8 +94,12 @@ instance Arbitrary (Statement MaybeHole) where
 
   shrink = shrinkStmt
 
+-- | Check that applying an edit to a program without holes returns
+-- just the program the edit.
 prop_id :: Statement NoHole -> Edit -> Bool
 prop_id s delta = apply s delta == Just (s, delta)
 
+-- | Check that applying an edit of length |s| (where |s| is the number of holes
+-- in s) to a program s consumes all the edits and returns a new program
 prop_apply_count :: Statement MaybeHole -> Property
 prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (applyEdit s delta)
