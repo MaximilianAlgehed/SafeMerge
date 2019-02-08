@@ -30,6 +30,7 @@ library
     , Substitutions
     , Logic
     , EmbeddedSyntax
+    , Semantics
   hs-source-dirs:
       src
   build-depends:
