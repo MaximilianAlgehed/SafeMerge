@@ -6,6 +6,7 @@
 #-}
 module ProgramRep where
 
+import qualified Data.Set as S
 import Data.Data
 import Data.Typeable
 import Data.Generics.Uniplate.Data
@@ -114,3 +115,7 @@ setVariableIndex :: Statement -> Int -> Statement
 setVariableIndex s i = transformBi go s
   where
     go (Name n) = Name (n ++ "_" ++ show i)
+
+-- | Compute the variables from a statement
+vars :: Statement -> S.Set Variable
+vars = S.fromList . universeBi 
