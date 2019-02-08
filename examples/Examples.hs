@@ -7,7 +7,7 @@ import EmbeddedSyntax
 
 import GHC.Exts
 
-p0 :: Statement NoHole
+p0 :: Statement
 p0 = do
   if "x" :>: "y" & "z" :>: "y" then
     "z" := 6
