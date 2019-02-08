@@ -2,10 +2,16 @@
            , GADTs
            , KindSignatures
            , StandaloneDeriving
+           , DeriveDataTypeable
 #-}
 module ProgramRep where
 
-data Variable = Name String deriving (Eq, Ord)
+import Data.Data
+import Data.Typeable
+import Data.Generics.Uniplate.Data
+import Data.Generics.Uniplate.Operations
+
+data Variable = Name String deriving (Eq, Ord, Data, Typeable)
 
 instance Show Variable where
   show (Name s) = s
@@ -14,7 +20,7 @@ data Expr where
   Var   :: Variable -> Expr
   Lit   :: Int      -> Expr
   (:+:) :: Expr     -> Expr -> Expr
-  deriving Eq
+  deriving (Eq, Data, Typeable)
 
 instance Show Expr where
   show e = case e of
@@ -28,7 +34,7 @@ data Condition where
   (:>:)  :: Expr      -> Expr      -> Condition
   (:==:) :: Expr      -> Expr      -> Condition
   CNot   :: Condition -> Condition
-  deriving Eq
+  deriving (Eq, Data, Typeable)
 
 infixr 4 :>:
 
@@ -48,7 +54,7 @@ data Statement where
   SSeq   :: Statement -> Statement -> Statement 
   SWhile :: Condition -> Statement -> Statement 
   SIf    :: Condition -> Statement -> Statement -> Statement
-  deriving Eq
+  deriving (Eq, Data, Typeable)
 
 infixl 0 :=
 
@@ -102,10 +108,4 @@ applyEdit s delta = do
   return s'
 
 numHoles :: Statement -> Int
-numHoles s = case s of
-  SHole       -> 1
-  SSeq s0 s1  -> numHoles s0 + numHoles s1
-  SIf c s0 s1 -> numHoles s0 + numHoles s1
-  SWhile c s  -> numHoles s
-  SSkip       -> 0
-  v := e      -> 0
+numHoles s = length [ () | SHole <- universe s ]
