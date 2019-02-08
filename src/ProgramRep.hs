@@ -72,7 +72,7 @@ instance Show Statement where
                  ++ map ("  "++) (showL t)
                  ++ ["else"]
                  ++ map ("  "++) (showL f)
-      SWhile c l -> ["while(" ++ show c ++ ")"]
+      SWhile c l -> ["while (" ++ show c ++ ")"]
                  ++ map ("  "++) (showL l)
 
 type Edit = [Statement]

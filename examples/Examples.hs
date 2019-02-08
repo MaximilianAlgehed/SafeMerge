@@ -5,6 +5,7 @@ import ProgramRep
 import Logic
 import EmbeddedSyntax
 
+import Prelude (($))
 import GHC.Exts
 
 p0 :: Statement
@@ -14,3 +15,10 @@ p0 = do
   else
     "z" := 5
   "z" := "z" + "x"
+
+p1 :: Statement
+p1 = do
+  "z" := 0
+  while ("y" :>: "x") $ do
+    "x" := "x" + 1
+    "z" := "z" + 1

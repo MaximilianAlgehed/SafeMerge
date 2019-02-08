@@ -1,5 +1,18 @@
 {-# LANGUAGE DataKinds #-}
-module EmbeddedSyntax where
+module EmbeddedSyntax ( (==>)
+                      , (&&&)
+                      , notf
+                      , (===)
+                      , Num(..)
+                      , IsString(..)
+                      , return
+                      , while
+                      , (>>)
+                      , skip
+                      , hole
+                      , ifThenElse
+                      , (&))
+                      where
 
 import Logic
 import ProgramRep
@@ -29,11 +42,14 @@ instance IsString Variable where
 instance IsString Expr where
   fromString = Var . fromString
 
-(+) :: Expr -> Expr -> Expr
-(+) = (:+:)
-
-fromInteger :: Integer -> Expr
-fromInteger = Lit . P.fromInteger
+instance Num Expr where
+  (+)         = (:+:)
+  (*)         = undefined
+  (-)         = undefined
+  negate      = undefined
+  signum      = undefined
+  abs         = undefined
+  fromInteger = Lit . P.fromInteger
 
 {- Syntax for conditions -}
 (&) :: Condition -> Condition -> Condition
@@ -58,3 +74,6 @@ ifThenElse = SIf
 
 return :: a -> a
 return = id
+
+while :: Condition -> Statement -> Statement
+while c s = SWhile c s
