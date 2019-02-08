@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, DataKinds #-}
 module Logic where
 
 import ProgramRep hiding ((:>:))
