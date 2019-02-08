@@ -29,6 +29,7 @@ library
       ProgramRep
     , Substitutions
     , Logic
+    , EmbeddedSyntax
   hs-source-dirs:
       src
   build-depends:
