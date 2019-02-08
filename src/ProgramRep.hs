@@ -98,7 +98,6 @@ apply (SIf c s0 s1) delta = do
 apply (SWhile c s) delta = do
   (s', delta1) <- apply s delta
   return (SWhile c s', delta1)
-apply _ _ = Nothing
 
 -- | Apply an Edit and ensure that all the statements in the edit
 -- were used in the statement
@@ -109,3 +108,9 @@ applyEdit s delta = do
 
 numHoles :: Statement -> Int
 numHoles s = length [ () | SHole <- universe s ]
+
+-- | From s and i compute s[V/Vi]
+setVariableIndex :: Statement -> Int -> Statement
+setVariableIndex s i = transformBi go s
+  where
+    go (Name n) = Name (n ++ "_" ++ show i)
