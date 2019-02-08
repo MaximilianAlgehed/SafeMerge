@@ -30,6 +30,8 @@ data Condition where
   CNot   :: Condition -> Condition
   deriving Eq
 
+infixr 4 :>:
+
 instance Show Condition where
   show c = case c of
     c0 :&&: c1 -> show c0 ++ " & " ++ show c1
@@ -46,6 +48,8 @@ data Statement :: HasHole -> * where
   SSeq   :: Statement h     -> Statement h -> Statement h
   SIf    :: Condition       -> Statement h -> Statement h -> Statement h
   SWhile :: Condition       -> Statement h -> Statement h
+
+infixl 0 :=
 
 deriving instance Eq (Statement h)
 

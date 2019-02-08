@@ -1,37 +1,36 @@
 {-# LANGUAGE GADTs, DataKinds #-}
 module Logic where
 
-import ProgramRep hiding ((:>:))
-import qualified ProgramRep as P
+import ProgramRep
 import Substitutions
 
 data Formula where
-  (:&:)  :: Formula -> Formula -> Formula
-  (:->:) :: Formula -> Formula -> Formula 
-  (:=:)  :: Expr    -> Expr    -> Formula
-  (:>:)  :: Expr    -> Expr    -> Formula
-  FNot   :: Formula -> Formula
+  (:&)  :: Formula -> Formula -> Formula
+  (:->) :: Formula -> Formula -> Formula 
+  (:=:) :: Expr    -> Expr    -> Formula
+  (:>)  :: Expr    -> Expr    -> Formula
+  FNot  :: Formula -> Formula
 
 instance Show Formula where
-  show f = case f of
-    f0 :&:  f1 -> show f0 ++ " & "  ++ show f1
-    f0 :->: f1 -> "(" ++ show f0 ++ ") -> " ++ show f1
-    e0 :=:  e1 -> show e0 ++ " = "  ++ show e1
-    e0 :>:  e1 -> show e0 ++ " > "  ++ show e1
-    FNot f     -> "!(" ++ show f ++ ")"
+  showsPrec p f = case f of
+    e0 :=: e1 -> showString $ show e0 ++ " = " ++ show e1
+    e0 :>  e1 -> showString $ show e0 ++ " > " ++ show e1
+    f0 :&  f1 -> showParen (p >= 4) $ showsPrec 3 f0 . showString " & " . showsPrec 3 f1
+    FNot f    -> showParen (p >= 5) $ showString "! " . showsPrec 4 f
+    f0 :-> f1 -> showParen (p >= 3) $ showsPrec 3 f0 . showString " -> " . showsPrec 2 f1
 
 instance HasSubst Formula where
   applySubst s f = case f of
-    f0 :&:  f1 -> applySubst s f0 :&:  applySubst s f1
-    f0 :->: f1 -> applySubst s f0 :->: applySubst s f1
-    e0 :=:  e1 -> applySubst s e0 :=:  applySubst s e1
-    e0 :>:  e1 -> applySubst s e0 :>:  applySubst s e1
-    FNot f     -> FNot (applySubst s f)
+    f0 :&  f1 -> applySubst s f0 :&  applySubst s f1
+    f0 :-> f1 -> applySubst s f0 :-> applySubst s f1
+    e0 :=: e1 -> applySubst s e0 :=:  applySubst s e1
+    e0 :>  e1 -> applySubst s e0 :>  applySubst s e1
+    FNot f    -> FNot (applySubst s f)
 
 conditionToFormula :: Condition -> Formula
 conditionToFormula c = case c of
-  c0 :&&: c1  -> conditionToFormula c0 :&: conditionToFormula c1
-  e0 P.:>: e1 -> e0 :>: e1
+  c0 :&&: c1  -> conditionToFormula c0 :& conditionToFormula c1
+  e0 :>: e1   -> e0 :> e1
   e0 :==: e1  -> e0 :=: e1
   CNot c      -> FNot (conditionToFormula c)
 
@@ -45,6 +44,6 @@ wp stmt phi = case stmt of
   SIf c s0 s1 -> do
     phi0 <- wp s0 phi
     phi1 <- wp s1 phi
-    return $ (conditionToFormula c :->: phi0) :&: (FNot (conditionToFormula c) :->: phi1)
+    return $ (conditionToFormula c :-> phi0) :& (FNot (conditionToFormula c) :-> phi1)
   -- Don't handle while loops yet
   SWhile c s -> Nothing
