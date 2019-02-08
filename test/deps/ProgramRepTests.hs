@@ -49,54 +49,53 @@ instance Arbitrary Condition where
     
     CNot c     -> CNot <$> shrink c
 
-instance Arbitrary AtomicStatement where
-  arbitrary = oneof [ return Skip
-                    , (:=) <$> arbitrary <*> arbitrary ]
-
-  shrink a = case a of
-    Skip               -> []
-    v := e             -> (v :=) <$> shrink e
-
-shrinkStmt :: Arbitrary (Statement h) => Statement h -> [Statement h]
-shrinkStmt s = case s of
-  SAtom a      -> SAtom <$> shrink a
-  SSeq s0 s1   -> binOpShrink SSeq s0 s1 
-  SIf c s0 s1  -> binOpShrink (SIf c) s0 s1 ++ [ SIf c' s0 s1 | c' <- shrink c ] 
-  SWhile c s   -> [s]
-               ++ ((\c -> SWhile c s) <$> shrink c)
-               ++ ((SWhile c) <$> shrinkStmt s)
-
-instance Arbitrary (Statement NoHole) where
+instance Arbitrary Statement where
   arbitrary = sized go
     where
       go d = case d of
-        0 -> SAtom <$> arbitrary
-        d -> oneof [ SAtom <$> arbitrary
-                   , SSeq <$> go (d `div` 2) <*> go (d `div` 2)
-                   , SIf  <$> arbitrary <*> go (d `div` 2) <*> go (d `div` 2)
-                   , SWhile <$> arbitrary <*> go (d `div` 2) ]
-
-  shrink = shrinkStmt
-
-instance Arbitrary (Statement MaybeHole) where
-  arbitrary = sized go
-    where
-      go d = case d of
-        0 -> oneof [ SAtom <$> arbitrary , return SHole ]
-        d -> oneof [ SAtom <$> arbitrary
+        0 -> atomic
+        d -> oneof [ atomic
                    , return SHole
                    , SSeq <$> go (d `div` 2) <*> go (d `div` 2)
                    , SIf  <$> arbitrary <*> go (d `div` 2) <*> go (d `div` 2)
                    , SWhile <$> arbitrary <*> go (d `div` 2) ]
 
-  shrink = shrinkStmt
+      atomic = oneof [ return SSkip, (:=) <$> arbitrary <*> arbitrary ]
+
+  shrink s = case s of
+    SSeq s0 s1   -> binOpShrink SSeq s0 s1 
+    SIf c s0 s1  -> binOpShrink (SIf c) s0 s1 ++ [ SIf c' s0 s1 | c' <- shrink c ] 
+    SWhile c s   -> [s]
+                 ++ ((\c -> SWhile c s) <$> shrink c)
+                 ++ ((SWhile c) <$> shrink s)
+    SSkip        -> []
+    v := e       -> (v :=) <$> shrink e
+    SHole        -> []
+
+newtype NoHoleStatement = NoHole Statement
+
+instance Show NoHoleStatement where
+  show (NoHole s) = show s
+
+instance Arbitrary NoHoleStatement where
+  arbitrary = NoHole <$> sized go
+    where
+      go d = case d of
+        0 -> atomic
+        d -> oneof [ atomic
+                   , SSeq <$> go (d `div` 2) <*> go (d `div` 2)
+                   , SIf  <$> arbitrary <*> go (d `div` 2) <*> go (d `div` 2)
+                   , SWhile <$> arbitrary <*> go (d `div` 2) ]
+      atomic = oneof [ return SSkip, (:=) <$> arbitrary <*> arbitrary ]
+
+  shrink (NoHole s) = NoHole <$> shrink s
 
 -- | Check that applying an edit to a program without holes returns
 -- just the program the edit.
-prop_id :: Statement NoHole -> Edit -> Bool
-prop_id s delta = apply s delta == Just (s, delta)
+prop_id :: NoHoleStatement -> Edit -> Bool
+prop_id (NoHole s) delta = apply s delta == Just (s, delta)
 
 -- | Check that applying an edit of length |s| (where |s| is the number of holes
 -- in s) to a program s consumes all the edits and returns a new program
-prop_apply_count :: Statement MaybeHole -> Property
-prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \delta -> isJust (applyEdit s delta)
+prop_apply_count :: Statement -> Property
+prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \nhdelta -> isJust (applyEdit s [ s | NoHole s <- nhdelta ])

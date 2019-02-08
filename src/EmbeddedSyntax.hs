@@ -42,18 +42,18 @@ fromInteger = Lit . P.fromInteger
 infixr 3 &
 
 {- Syntax for programs -}
-hole :: Statement MaybeHole
+hole :: Statement
 hole = SHole
 
-skip :: Statement h
+skip :: Statement
 skip = SSkip
 
-(>>) :: Statement h -> Statement h -> Statement h
+(>>) :: Statement -> Statement -> Statement
 (>>) = SSeq
 
 infixl >>
 
-ifThenElse :: Condition -> Statement h -> Statement h -> Statement h
+ifThenElse :: Condition -> Statement -> Statement -> Statement
 ifThenElse = SIf
 
 return :: a -> a

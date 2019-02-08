@@ -34,7 +34,7 @@ conditionToFormula c = case c of
   e0 :==: e1  -> e0 :=: e1
   CNot c      -> FNot (conditionToFormula c)
 
-wp :: Statement NoHole -> Formula -> Maybe Formula 
+wp :: Statement -> Formula -> Maybe Formula 
 wp stmt phi = case stmt of
   SSkip  -> return phi
   x := e -> return $ applySubst (singleton x e) phi
@@ -47,3 +47,5 @@ wp stmt phi = case stmt of
     return $ (conditionToFormula c :-> phi0) :& (FNot (conditionToFormula c) :-> phi1)
   -- Don't handle while loops yet
   SWhile c s -> Nothing
+  -- Holes do not have a meaningful semantics
+  SHole      -> Nothing

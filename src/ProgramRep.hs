@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds, GADTs, KindSignatures, StandaloneDeriving #-}
+{-# LANGUAGE DataKinds
+           , GADTs
+           , KindSignatures
+           , StandaloneDeriving
+#-}
 module ProgramRep where
-
-data HasHole where
-  MaybeHole :: HasHole
-  NoHole    :: HasHole
 
 data Variable = Name String deriving (Eq, Ord)
 
@@ -41,22 +41,21 @@ instance Show Condition where
 
 -- | Statements parameterised by an index telling us if they
 -- may contain a hole or not
-data Statement :: HasHole -> * where 
-  SHole  :: Statement MaybeHole
-  SSkip  :: Statement h
-  (:=)   :: Variable -> Expr -> Statement h
-  SSeq   :: Statement h     -> Statement h -> Statement h
-  SIf    :: Condition       -> Statement h -> Statement h -> Statement h
-  SWhile :: Condition       -> Statement h -> Statement h
+data Statement where 
+  SHole  :: Statement
+  SSkip  :: Statement
+  (:=)   :: Variable -> Expr -> Statement
+  SSeq   :: Statement -> Statement -> Statement 
+  SWhile :: Condition -> Statement -> Statement 
+  SIf    :: Condition -> Statement -> Statement -> Statement
+  deriving Eq
 
 infixl 0 :=
 
-deriving instance Eq (Statement h)
-
-instance Show (Statement h) where
+instance Show Statement where
   show = unlines . showL 
     where
-    showL :: Statement h -> [String]
+    showL :: Statement -> [String]
     showL s = case s of
       SHole   -> ["[.]"]
       SSkip   -> ["skip"]
@@ -69,11 +68,11 @@ instance Show (Statement h) where
       SWhile c l -> ["while(" ++ show c ++ ")"]
                  ++ map ("  "++) (showL l)
 
-type Edit = [Statement NoHole]
+type Edit = [Statement]
 
 -- | Apply an Edit `delta` by sequentially inserting the statements
 -- of `delta` into the holes in the statement
-apply :: Statement h -> Edit -> Maybe (Statement NoHole, Edit)
+apply :: Statement -> Edit -> Maybe (Statement, Edit)
 -- [.]
 apply SHole (s : delta)  = return (s, delta)
 -- A
@@ -97,12 +96,12 @@ apply _ _ = Nothing
 
 -- | Apply an Edit and ensure that all the statements in the edit
 -- were used in the statement
-applyEdit :: Statement h -> Edit -> Maybe (Statement NoHole)
+applyEdit :: Statement -> Edit -> Maybe Statement
 applyEdit s delta = do
   (s', []) <- apply s delta
   return s'
 
-numHoles :: Statement h -> Int
+numHoles :: Statement -> Int
 numHoles s = case s of
   SHole       -> 1
   SSeq s0 s1  -> numHoles s0 + numHoles s1
