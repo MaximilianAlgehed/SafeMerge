@@ -15,7 +15,7 @@ data Formula where
 instance Show Formula where
   show f = case f of
     f0 :&:  f1 -> show f0 ++ " & "  ++ show f1
-    f0 :->: f1 -> show f0 ++ " -> " ++ show f1
+    f0 :->: f1 -> "(" ++ show f0 ++ ") -> " ++ show f1
     e0 :=:  e1 -> show e0 ++ " = "  ++ show e1
     e0 :>:  e1 -> show e0 ++ " > "  ++ show e1
     FNot f     -> "!(" ++ show f ++ ")"
@@ -28,11 +28,6 @@ instance HasSubst Formula where
     e0 :>:  e1 -> applySubst s e0 :>:  applySubst s e1
     FNot f     -> FNot (applySubst s f)
 
-wpAtomic :: AtomicStatement -> Formula -> Formula
-wpAtomic a phi = case a of
-  Skip   -> phi
-  x := e -> applySubst (singleton x e) phi
-
 conditionToFormula :: Condition -> Formula
 conditionToFormula c = case c of
   c0 :&&: c1  -> conditionToFormula c0 :&: conditionToFormula c1
@@ -42,7 +37,8 @@ conditionToFormula c = case c of
 
 wp :: Statement NoHole -> Formula -> Maybe Formula 
 wp stmt phi = case stmt of
-  SAtom a    -> Just (wpAtomic a phi)
+  SSkip  -> return phi
+  x := e -> return $ applySubst (singleton x e) phi
   SSeq s0 s1 -> do
     phi' <- wp s1 phi
     wp s0 phi'

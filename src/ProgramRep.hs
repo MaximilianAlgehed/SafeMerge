@@ -37,21 +37,12 @@ instance Show Condition where
     e0 :==: e1 -> show e0 ++ " == " ++ show e1
     CNot c     -> "!(" ++ show c ++ ")"
 
-data AtomicStatement where
-  Skip       :: AtomicStatement
-  (:=)       :: Variable -> Expr -> AtomicStatement
-  deriving Eq
-
-instance Show AtomicStatement where
-  show a = case a of
-    Skip               -> "skip"
-    v := e             -> show v ++ " := " ++ show e
-
 -- | Statements parameterised by an index telling us if they
 -- may contain a hole or not
 data Statement :: HasHole -> * where 
   SHole  :: Statement MaybeHole
-  SAtom  :: AtomicStatement -> Statement h
+  SSkip  :: Statement h
+  (:=)   :: Variable -> Expr -> Statement h
   SSeq   :: Statement h     -> Statement h -> Statement h
   SIf    :: Condition       -> Statement h -> Statement h -> Statement h
   SWhile :: Condition       -> Statement h -> Statement h
@@ -64,7 +55,8 @@ instance Show (Statement h) where
     showL :: Statement h -> [String]
     showL s = case s of
       SHole   -> ["[.]"]
-      SAtom a -> [show a]
+      SSkip   -> ["skip"]
+      v := e  -> [show v ++ " := " ++ show e]
       SSeq s0 s1 -> showL s0 ++ showL s1
       SIf c t f  -> ["if(" ++ show c ++ ")"]
                  ++ map ("  "++) (showL t)
@@ -81,7 +73,8 @@ apply :: Statement h -> Edit -> Maybe (Statement NoHole, Edit)
 -- [.]
 apply SHole (s : delta)  = return (s, delta)
 -- A
-apply (SAtom a) delta    = return (SAtom a, delta)
+apply SSkip delta        = return (SSkip, delta)
+apply (v := e) delta     = return (v := e, delta)
 -- S ; S
 apply (SSeq s0 s1) delta = do
   (s0', delta1) <- apply s0 delta
@@ -108,7 +101,8 @@ applyEdit s delta = do
 numHoles :: Statement h -> Int
 numHoles s = case s of
   SHole       -> 1
-  SAtom a     -> 0
   SSeq s0 s1  -> numHoles s0 + numHoles s1
   SIf c s0 s1 -> numHoles s0 + numHoles s1
   SWhile c s  -> numHoles s
+  SSkip       -> 0
+  v := e      -> 0
