@@ -44,7 +44,7 @@ library TestCode
   hs-source-dirs:
     test/deps
   build-depends:
-    base, ThreeWayMerge, QuickCheck
+    base, ThreeWayMerge, QuickCheck, containers
 
 test-suite ThreeWayMerge-test
   type: exitcode-stdio-1.0

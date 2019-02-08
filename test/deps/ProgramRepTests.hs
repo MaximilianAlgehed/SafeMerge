@@ -3,6 +3,7 @@ module ProgramRepTests where
 
 import Test.QuickCheck
 import Data.Maybe
+import qualified Data.Set as S
 
 import ProgramRep
 
@@ -99,3 +100,7 @@ prop_id (NoHole s) delta = apply s delta == Just (s, delta)
 -- in s) to a program s consumes all the edits and returns a new program
 prop_apply_count :: Statement -> Property
 prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \nhdelta -> isJust (applyEdit s [ s | NoHole s <- nhdelta ])
+
+-- | Check that the set of variables after doing setVariableIndex remains the same but with `_i` added
+prop_set_variable_index :: Statement -> Int -> Property
+prop_set_variable_index s i = i >= 0 ==> vars (setVariableIndex s i) == (S.map (\(Name n) -> Name $ n ++ "_" ++ show i) (vars s))

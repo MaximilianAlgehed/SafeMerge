@@ -12,6 +12,7 @@ tests :: [Test]
 tests =
   [ testGroup "ProgramRep" [
     testProperty "prop_id" prop_id,
-    testProperty "prop_apply_count" prop_apply_count
+    testProperty "prop_apply_count" prop_apply_count,
+    testProperty "prop_set_variable_index" prop_set_variable_index 
     ]
   ]
