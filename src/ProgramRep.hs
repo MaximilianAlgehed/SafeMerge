@@ -119,3 +119,36 @@ setVariableIndex s i = transformBi go s
 -- | Compute the variables from a statement
 vars :: Statement -> S.Set Variable
 vars = S.fromList . universeBi 
+
+flatten :: Statement -> [Statement]
+flatten s = filter (/= SSkip) $ go s
+  where
+    go s = case s of
+      SSeq s0 s1 -> go s0 ++ go s1
+      _          -> [s]
+
+sseq :: [Statement] -> Statement
+sseq = foldr SSeq SSkip
+
+-- | Semantically equivalent to `s0 ; s1` given that `vars s0` is disjoint from `vars s1`
+productProgram :: Statement -> Statement -> Statement
+productProgram s0 s1 = go (flatten s0) (flatten s1)
+  where
+    -- Following Fig. 8 in the Sousa et al. paper
+    go :: [Statement] -> [Statement] -> Statement
+    go ss0 ss1 = case (ss0, ss1) of
+      -- Rule (1)
+      ((v := e) : s0, s1)    -> (v := e) `SSeq` go s0 s1
+      -- Rule (2)
+      ((SIf c st sf):s1, s2) -> SIf c (go (st:s1) s2) (go (sf:s1) s2)
+      -- Rule (5) -- This has to go before the match for Rule (4) case 2
+      ([SWhile c0 s0], [SWhile c1 s1]) ->
+        let w = SWhile (c0 :&&: c1) (productProgram s0 s1)
+            r = SIf c0 (SWhile c0 s0) (SIf c1 (SWhile c1 s1) SSkip)
+        in w `SSeq` r
+      -- Rule (4) (case 1)
+      ((SWhile c0 s):s0, (SWhile c1 s'):s1) -> go [SWhile c0 s] [SWhile c1 s'] `SSeq` go s0 s1
+      -- Rule (4) (case 2)
+      ((SWhile c0 s):s0, s1) -> go s1 ((SWhile c0 s):s0)
+      -- Base case
+      ([], s) -> sseq s
