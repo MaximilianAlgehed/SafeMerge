@@ -138,6 +138,7 @@ setVariableIndex s i = transformBi go s
 vars :: Statement -> S.Set Variable
 vars = S.fromList . universeBi 
 
+-- | Flatten a tree shape of statements (built from `SSeq`)
 flatten :: Statement -> [Statement]
 flatten = filter (/= SSkip) . go
   where
@@ -145,6 +146,7 @@ flatten = filter (/= SSkip) . go
       SSeq s0 s1 -> go s0 ++ go s1
       _          -> [s]
 
+-- | Sequence a list of statements
 sseq :: [Statement] -> Statement
 sseq = foldr SSeq SSkip
 
