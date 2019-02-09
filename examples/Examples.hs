@@ -19,6 +19,11 @@ p0 = do
 p1 :: Statement
 p1 = do
   "z" := 0
-  while ("y" :>: "x") $ do
-    "x" := "x" + 1
-    "z" := "z" + 1
+  if "y" :>: "x" then
+    while ("y" :>: "x") $ do
+      "x" := "x" + 1
+      "z" := "z" + 1
+  else do
+    while ("x" :>: "y") $ do
+      "y" := "y" + 1
+      "z" := "z" - 1

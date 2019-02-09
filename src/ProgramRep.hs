@@ -21,13 +21,15 @@ data Expr where
   Var   :: Variable -> Expr
   Lit   :: Int      -> Expr
   (:+:) :: Expr     -> Expr -> Expr
+  (:-:) :: Expr     -> Expr -> Expr
   deriving (Eq, Data, Typeable)
 
 instance Show Expr where
-  show e = case e of
-    Var v     -> show v
-    Lit i     -> show i
-    e0 :+: e1 -> show e0 ++ " + " ++ show e1
+  showsPrec p e = case e of
+    Var v     -> showString $ show v
+    Lit i     -> showString $ show i
+    e0 :+: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " + " . showsPrec 5 e1
+    e0 :-: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " - " . showsPrec 5 e1
 
 -- | `while` and `if` statement conditions.
 data Condition where

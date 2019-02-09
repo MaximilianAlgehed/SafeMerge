@@ -45,7 +45,7 @@ instance IsString Expr where
 instance Num Expr where
   (+)         = (:+:)
   (*)         = undefined
-  (-)         = undefined
+  (-)         = (:-:)
   negate      = undefined
   signum      = undefined
   abs         = undefined
