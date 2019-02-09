@@ -18,7 +18,6 @@ import Logic
 import ProgramRep
 
 import Prelude hiding ((>>), fromInteger, return)
-import qualified Prelude as P
 import GHC.Exts
 
 {- Syntax for Formulas -}
@@ -35,21 +34,6 @@ notf = FNot
 infix 4 ===
 infixr 3 &&&
 infixr 2 ==>
-
-{- Syntax for Expr -}
-instance IsString Variable where
-  fromString = Name
-instance IsString Expr where
-  fromString = Var . fromString
-
-instance Num Expr where
-  (+)         = (:+:)
-  (*)         = undefined
-  (-)         = (:-:)
-  negate      = undefined
-  signum      = undefined
-  abs         = undefined
-  fromInteger = Lit . P.fromInteger
 
 {- Syntax for conditions -}
 (&) :: Condition -> Condition -> Condition

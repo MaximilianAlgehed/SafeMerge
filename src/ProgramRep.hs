@@ -8,14 +8,16 @@ module ProgramRep where
 
 import qualified Data.Set as S
 import Data.Data
-import Data.Typeable
 import Data.Generics.Uniplate.Data
-import Data.Generics.Uniplate.Operations
+import GHC.Exts
 
 data Variable = Name String deriving (Eq, Ord, Data, Typeable)
 
 instance Show Variable where
   show (Name s) = s
+
+instance IsString Variable where
+  fromString = Name
 
 data Expr where
   Var   :: Variable -> Expr
@@ -30,6 +32,19 @@ instance Show Expr where
     Lit i     -> showString $ show i
     e0 :+: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " + " . showsPrec 5 e1
     e0 :-: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " - " . showsPrec 5 e1
+
+instance Num Expr where
+  (+)         = (:+:)
+  (*)         = undefined
+  (-)         = (:-:)
+  negate      = undefined
+  signum      = undefined
+  abs         = undefined
+  fromInteger = Lit . fromInteger
+
+
+instance IsString Expr where
+  fromString = Var . fromString
 
 -- | `while` and `if` statement conditions.
 data Condition where
@@ -46,7 +61,7 @@ instance Show Condition where
     c0 :&&: c1 -> show c0 ++ " & " ++ show c1
     e0 :>: e1  -> show e0 ++ " > " ++ show e1
     e0 :==: e1 -> show e0 ++ " == " ++ show e1
-    CNot c     -> "!(" ++ show c ++ ")"
+    CNot c'    -> "!(" ++ show c' ++ ")"
 
 -- | Statements parameterised by an index telling us if they
 -- may contain a hole or not
@@ -84,6 +99,7 @@ type Edit = [Statement]
 apply :: Statement -> Edit -> Maybe (Statement, Edit)
 -- [.]
 apply SHole (s : delta)  = return (s, delta)
+apply SHole []           = Nothing
 -- A
 apply SSkip delta        = return (SSkip, delta)
 apply (v := e) delta     = return (v := e, delta)
@@ -95,8 +111,8 @@ apply (SSeq s0 s1) delta = do
 -- C ? S0 : S1
 apply (SIf c s0 s1) delta = do
   (s0', delta1) <- apply s0 delta
-  (s1', delta1) <- apply s1 delta1
-  return (SIf c s0' s1', delta1)
+  (s1', delta2) <- apply s1 delta1
+  return (SIf c s0' s1', delta2)
 -- while(C) S
 apply (SWhile c s) delta = do
   (s', delta1) <- apply s delta
@@ -123,7 +139,7 @@ vars :: Statement -> S.Set Variable
 vars = S.fromList . universeBi 
 
 flatten :: Statement -> [Statement]
-flatten s = filter (/= SSkip) $ go s
+flatten = filter (/= SSkip) . go
   where
     go s = case s of
       SSeq s0 s1 -> go s0 ++ go s1
@@ -134,7 +150,7 @@ sseq = foldr SSeq SSkip
 
 -- | Semantically equivalent to `s0 ; s1` given that `vars s0` is disjoint from `vars s1`
 productProgram :: Statement -> Statement -> Statement
-productProgram s0 s1 = go (flatten s0) (flatten s1)
+productProgram st0 st1 = go (flatten st0) (flatten st1)
   where
     -- Following Fig. 8 in the Sousa et al. paper
     go :: [Statement] -> [Statement] -> Statement
@@ -151,6 +167,7 @@ productProgram s0 s1 = go (flatten s0) (flatten s1)
       -- Rule (4) (case 1)
       ((SWhile c0 s):s0, (SWhile c1 s'):s1) -> go [SWhile c0 s] [SWhile c1 s'] `SSeq` go s0 s1
       -- Rule (4) (case 2)
-      ((SWhile c0 s):s0, s1) -> go s1 ((SWhile c0 s):s0)
+      (st@(SWhile _ _):s0, s1) -> go s1 (st:s0)
       -- Base case
       ([], s) -> sseq s
+      _       -> error "The impossible happened, this case should not have happened"

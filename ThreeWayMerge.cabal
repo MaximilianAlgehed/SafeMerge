@@ -38,6 +38,7 @@ library
     , containers
     , uniplate
   default-language: Haskell2010
+  ghc-options: -Wall
 
 library TestCode
   exposed-modules:

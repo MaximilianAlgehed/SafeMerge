@@ -12,13 +12,14 @@ exprSem env e = case e of
   Var v     -> M.lookup v env
   Lit i     -> return i
   e0 :+: e1 -> (+) <$> exprSem env e0 <*> exprSem env e1
+  e0 :-: e1 -> (-) <$> exprSem env e0 <*> exprSem env e1
 
 condSem :: Env -> Condition -> Maybe Bool
 condSem env c = case c of
   c0 :&&: c1 -> (&&) <$> condSem env c0 <*> condSem env c1
   e0 :>:  e1 -> (>)  <$> exprSem env e0 <*> exprSem env e1
   e0 :==: e1 -> (==) <$> exprSem env e0 <*> exprSem env e1
-  CNot c     -> not  <$> condSem env c
+  CNot c'    -> not  <$> condSem env c'
 
 stmtSem :: Env -> Statement -> Maybe Env
 stmtSem env s = case s of
@@ -30,10 +31,10 @@ stmtSem env s = case s of
     env' <- stmtSem env s0
     stmtSem env' s1
 
-  SWhile c s -> do
+  SWhile c s' -> do
     c' <- condSem env c
     if c' then
-      stmtSem env (SSeq s (SWhile c s))
+      stmtSem env (SSeq s' s)
     else
       return env
 
