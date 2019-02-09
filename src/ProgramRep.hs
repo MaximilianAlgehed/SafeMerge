@@ -42,7 +42,6 @@ instance Num Expr where
   abs         = undefined
   fromInteger = Lit . fromInteger
 
-
 instance IsString Expr where
   fromString = Var . fromString
 

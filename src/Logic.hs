@@ -49,3 +49,21 @@ wp stmt phi = case stmt of
   SWhile _ _  -> Nothing
   -- Holes do not have a meaningful semantics
   SHole      -> Nothing
+
+data HoareTriple = Hoare { precondition  :: Formula
+                         , program       :: Statement
+                         , postcondition :: Formula }
+
+instance Show HoareTriple where
+  show h = "{"
+         ++ show (precondition h)
+         ++ "}\n"
+         ++ show (program h)
+         ++ "{"
+         ++ show (postcondition h)
+         ++ "}"
+
+vc :: HoareTriple -> Maybe Formula
+vc h = do
+  weakestPrecondition <- wp (program h) (postcondition h)
+  return $ precondition h :-> weakestPrecondition
