@@ -17,7 +17,7 @@ module EmbeddedSyntax ( (==>)
 import Logic
 import ProgramRep
 
-import Prelude hiding ((>>), fromInteger, return)
+import Prelude hiding ((>>), return)
 import GHC.Exts
 
 {- Syntax for Formulas -}
