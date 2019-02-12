@@ -7,7 +7,7 @@
 module ProgramRep where
 
 import qualified Data.Set as S
-import Data.Data
+import Data.Data (Data, Typeable)
 import Data.Generics.Uniplate.Data
 import GHC.Exts
 
