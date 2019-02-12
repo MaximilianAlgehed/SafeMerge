@@ -4,6 +4,7 @@ module Examples where
 import ProgramRep
 import EmbeddedSyntax
 import Logic
+import Verification
 
 import Prelude (($))
 

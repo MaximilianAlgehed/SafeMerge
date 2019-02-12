@@ -44,7 +44,7 @@ mergeCandidateHoareTriple s deltaO deltaA deltaB deltaM outputs = do
            :-> ((Var $ o <> "_1") :=: (Var $ o <> "_3"))
       x2 o = (FNot $ (Var $ o <> "_0") :=: (Var $ o <> "_2"))
            :-> ((Var $ o <> "_2") :=: (Var $ o <> "_3"))
-      x3 o =  ((Var $ o <> "_0") :=: (Var $ o <> "_1"))
+      x3 o = ((Var $ o <> "_0") :=: (Var $ o <> "_1"))
            :& (((Var $ o <> "_1") :=: (Var $ o <> "_2"))
            :& ((Var $ o <> "_2") :=: (Var $ o <> "_3")))
       post = foldr (:&) (0 :=: 0) [ (x1 o :& x2 o) :| x3 o | o <- outputs ]
