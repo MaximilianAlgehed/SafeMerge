@@ -19,6 +19,12 @@ instance Show Variable where
 instance IsString Variable where
   fromString = Name
 
+instance Semigroup Variable where
+  Name n <> Name m = Name (n ++ m)
+
+instance Monoid Variable where
+  mempty = Name []
+
 data Expr where
   Var   :: Variable -> Expr
   Lit   :: Int      -> Expr

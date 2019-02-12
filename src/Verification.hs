@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Verification where
 
 import Logic
@@ -35,16 +36,16 @@ mergeCandidateHoareTriple s deltaO deltaA deltaB deltaM outputs = do
   let pm = setVariableIndex pm_ 3
   -- Generate the precondition
   let vs = vars po_ `S.union` vars pa_ `S.union` vars pb_ `S.union` vars pm_
-      pre = foldr (:&) (0 :=: 0) [ ((Var . Name $ v ++ "_0") :=: (Var . Name $ v ++ "_1")) :&
-                                   (((Var . Name $ v ++ "_1") :=: (Var . Name $ v ++ "_2")) :&
-                                    ((Var . Name $ v ++ "_2") :=: (Var . Name $ v ++ "_3")))
-                                 | Name v <- S.toList vs ]
-      x1 o = (FNot ((Var . Name $ o ++ "_0") :=: (Var . Name $ o ++ "_1")))
-           :-> ((Var . Name $ o ++ "_1") :=: (Var . Name $ o ++ "_3"))
-      x2 o = (FNot ((Var . Name $ o ++ "_0") :=: (Var . Name $ o ++ "_2")))
-           :-> ((Var . Name $ o ++ "_2") :=: (Var . Name $ o ++ "_3"))
-      x3 o =  ((Var . Name $ o ++ "_0") :=: (Var . Name $ o ++ "_1"))
-           :& (((Var . Name $ o ++ "_1") :=: (Var . Name $ o ++ "_2"))
-           :& ((Var . Name $ o ++ "_2") :=: (Var . Name $ o ++ "_3")))
-      post = foldr (:&) (0 :=: 0) [ (x1 o :& x2 o) :| x3 o | Name o <- outputs ]
+      pre = foldr (:&) (0 :=: 0) [ ((Var $ v <> "_0") :=: (Var $ v <> "_1")) :&
+                                   (((Var $ v <> "_1") :=: (Var $ v <> "_2")) :&
+                                    ((Var $ v <> "_2") :=: (Var $ v <> "_3")))
+                                 | v <- S.toList vs ]
+      x1 o = (FNot $ (Var $ o <> "_0") :=: (Var $ o <> "_1"))
+           :-> ((Var $ o <> "_1") :=: (Var $ o <> "_3"))
+      x2 o = (FNot $ (Var $ o <> "_0") :=: (Var $ o <> "_2"))
+           :-> ((Var $ o <> "_2") :=: (Var $ o <> "_3"))
+      x3 o =  ((Var $ o <> "_0") :=: (Var $ o <> "_1"))
+           :& (((Var $ o <> "_1") :=: (Var $ o <> "_2"))
+           :& ((Var $ o <> "_2") :=: (Var $ o <> "_3")))
+      post = foldr (:&) (0 :=: 0) [ (x1 o :& x2 o) :| x3 o | o <- outputs ]
   return $ Hoare pre (productProgram (productProgram po pa) (productProgram pb pm)) post
