@@ -49,7 +49,14 @@ library TestCode
   hs-source-dirs:
     test/deps
   build-depends:
-    base, ThreeWayMerge, QuickCheck, containers
+      base
+    , ThreeWayMerge
+    , QuickCheck
+    , HUnit
+    , containers
+    , test-framework
+    , test-framework-quickcheck2
+    , test-framework-hunit
   default-language: Haskell2010
 
 test-suite ThreeWayMerge-test
@@ -64,5 +71,6 @@ test-suite ThreeWayMerge-test
     , base >=4.7 && <5
     , test-framework
     , test-framework-quickcheck2
+    , test-framework-hunit
     , QuickCheck
   default-language: Haskell2010

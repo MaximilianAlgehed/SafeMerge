@@ -1,18 +1,16 @@
 import Test.Framework (defaultMain, testGroup, Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.Framework.Providers.HUnit
 
 import Test.QuickCheck
 
-import ProgramRepTests
+import qualified ProgramRepTests as PRep
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: [Test]
 tests =
-  [ testGroup "ProgramRep" [
-      testProperty "prop_id" prop_id,
-      testProperty "prop_apply_count" prop_apply_count,
-      testProperty "prop_set_variable_index" prop_set_variable_index 
-    ]
+  [ testGroup "ProgramRep: Edits" PRep.unitPropertyBasedEdits
+  , testGroup "ProgramRep: Expr printer" PRep.unitExprPrettyPrint
   ]

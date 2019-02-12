@@ -1,9 +1,13 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, FlexibleContexts, OverloadedStrings, ScopedTypeVariables #-}
 module ProgramRepTests where
 
 import Test.QuickCheck
+import Test.HUnit ((@=?))
 import Data.Maybe
 import qualified Data.Set as S
+import Test.Framework (Test)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.Framework.Providers.HUnit (testCase)
 
 import ProgramRep
 
@@ -104,3 +108,21 @@ prop_apply_count s = forAll (vectorOf (numHoles s) arbitrary) $ \nhdelta -> isJu
 -- | Check that the set of variables after doing setVariableIndex remains the same but with `_i` added
 prop_set_variable_index :: Statement -> Int -> Property
 prop_set_variable_index s i = i >= 0 ==> vars (setVariableIndex s i) == (S.map (\(Name n) -> Name $ n ++ "_" ++ show i) (vars s))
+
+unitPropertyBasedEdits :: [Test]
+unitPropertyBasedEdits =
+  [ testProperty "prop_id" prop_id
+  , testProperty "prop_apply_count" prop_apply_count
+  , testProperty "prop_set_variable_index" prop_set_variable_index
+  ]
+
+-- | A bunch of test cases for the expression pretty printer
+unitExprPrettyPrint :: [Test]
+unitExprPrettyPrint =
+  let x :: Expr = "x"
+      y :: Expr = "y"
+      z :: Expr = "z"
+  in [ testCase "x + y + z"       $ show (x + y + z)       @=? "x + y + z"
+     , testCase "x - y + z"       $ show (x - y + z)       @=? "x - y + z"
+     , testCase "x + y - (z + y)" $ show (x + y - (z + y)) @=? "x + y - (z + y)"
+     ]
