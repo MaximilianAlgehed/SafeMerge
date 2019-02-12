@@ -6,7 +6,6 @@ import Substitutions
 
 import Data.Generics.Uniplate.Data
 import Data.Data
-import qualified Data.Set as S
 
 data Formula where
   (:&)  :: Formula -> Formula -> Formula
@@ -70,14 +69,3 @@ vc :: HoareTriple -> Maybe Formula
 vc h = do
   weakestPrecondition <- wp (program h) (postcondition h)
   return $ precondition h :-> weakestPrecondition
-
-programEquivalence :: Statement -> Statement -> [Variable] -> HoareTriple
-programEquivalence p0 p1 outputs =
-  let p0'  = setVariableIndex p0 0
-      p1'  = setVariableIndex p1 1
-      vs   = vars p0 `S.union` vars p1
-      -- Given initial states
-      pre  = foldr (:&) (0 :=: 0) [ (Var . Name $ v ++ "_0") :=: (Var . Name $ v ++ "_1") | Name v <- S.toList vs ]
-      -- All the outputs are the same
-      post = foldr (:&) (0 :=: 0) [ (Var . Name $ v ++ "_0") :=: (Var . Name $ v ++ "_1") | Name v <- outputs ]
-  in Hoare pre (productProgram p0' p1') post
