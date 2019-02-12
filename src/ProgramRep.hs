@@ -36,8 +36,8 @@ instance Show Expr where
   showsPrec p e = case e of
     Var v     -> showString $ show v
     Lit i     -> showString $ show i
-    e0 :+: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " + " . showsPrec 5 e1
-    e0 :-: e1 -> showParen (p >= 6) $ showsPrec 6 e0 . showString " - " . showsPrec 5 e1
+    e0 :+: e1 -> showParen (p >= 6) $ showsPrec 5 e0 . showString " + " . showsPrec 6 e1
+    e0 :-: e1 -> showParen (p >= 6) $ showsPrec 5 e0 . showString " - " . showsPrec 6 e1
 
 instance Num Expr where
   (+)         = (:+:)
