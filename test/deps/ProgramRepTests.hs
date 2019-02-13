@@ -127,4 +127,5 @@ unitExprPrettyPrint =
      , testCase "x + y - (z + y)" $ show (x + y - (z + y)) @=? "x + y - (z + y)"
      , testCase "x - y - z"       $ show (x - y - z)       @=? "x - y - z"
      , testCase "x - (y - z)"     $ show (x - (y - z))     @=? "x - (y - z)"
+     , testCase "1 - (2 - x)"     $ show (1 - (2 - x))     @=? "1 - (2 - x)"
      ]
