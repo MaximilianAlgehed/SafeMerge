@@ -12,9 +12,9 @@ programEquivalence p0 p1 outputs =
       p1'  = setVariableIndex p1 1
       vs   = vars p0 `S.union` vars p1
       -- Given initial states
-      pre  = foldr (:&) (0 :=: 0) [ (Var . Name $ v ++ "_0") :=: (Var . Name $ v ++ "_1") | Name v <- S.toList vs ]
+      pre  = foldr (:&) (0 :=: 0) [ Var (v # 0) :=: Var (v # 1) | v <- S.toList vs ]
       -- All the outputs are the same
-      post = foldr (:&) (0 :=: 0) [ (Var . Name $ v ++ "_0") :=: (Var . Name $ v ++ "_1") | Name v <- outputs ]
+      post = foldr (:&) (0 :=: 0) [ Var (v # 0) :=: Var (v # 1) | v <- outputs ]
   in Hoare pre (productProgram p0' p1') post
 
 mergeCandidateHoareTriple :: Statement         -- Contains holes
@@ -36,16 +36,16 @@ mergeCandidateHoareTriple s deltaO deltaA deltaB deltaM outputs = do
   let pm = setVariableIndex pm_ 3
   -- Generate the precondition
   let vs = vars po_ `S.union` vars pa_ `S.union` vars pb_ `S.union` vars pm_
-      pre = foldr (:&) (0 :=: 0) [ ((Var $ v <> "_0") :=: (Var $ v <> "_1")) :&
-                                   (((Var $ v <> "_1") :=: (Var $ v <> "_2")) :&
-                                    ((Var $ v <> "_2") :=: (Var $ v <> "_3")))
+      pre = foldr (:&) (0 :=: 0) [ (Var (v # 0) :=: Var (v # 1)) :&
+                                   ((Var (v # 1) :=: Var (v # 2)) :&
+                                    (Var (v # 2) :=: Var (v # 3)))
                                  | v <- S.toList vs ]
-      x1 o = (FNot $ (Var $ o <> "_0") :=: (Var $ o <> "_1"))
-           :-> ((Var $ o <> "_1") :=: (Var $ o <> "_3"))
-      x2 o = (FNot $ (Var $ o <> "_0") :=: (Var $ o <> "_2"))
-           :-> ((Var $ o <> "_2") :=: (Var $ o <> "_3"))
-      x3 o = ((Var $ o <> "_0") :=: (Var $ o <> "_1"))
-           :& (((Var $ o <> "_1") :=: (Var $ o <> "_2"))
-           :& ((Var $ o <> "_2") :=: (Var $ o <> "_3")))
+      x1 o = (FNot $ Var (o # 0) :=: Var (o # 1))
+           :-> (Var (o # 1) :=: Var (o # 3))
+      x2 o = (FNot $ Var (o # 0) :=: Var (o # 2))
+           :-> (Var (o # 2) :=: Var (o # 3))
+      x3 o = (Var (o # 0) :=: Var (o # 1))
+           :& ((Var (o # 1) :=: Var (o # 2))
+           :& (Var (o # 2) :=: Var (o # 3)))
       post = foldr (:&) (0 :=: 0) [ (x1 o :& x2 o) :| x3 o | o <- outputs ]
   return $ Hoare pre (productProgram (productProgram po pa) (productProgram pb pm)) post

@@ -3,6 +3,7 @@
            , KindSignatures
            , StandaloneDeriving
            , DeriveDataTypeable
+           , OverloadedStrings
 #-}
 module ProgramRep where
 
@@ -12,6 +13,9 @@ import Data.Generics.Uniplate.Data
 import GHC.Exts
 
 data Variable = Name String deriving (Eq, Ord, Data, Typeable)
+
+(#) :: Variable -> Int -> Variable
+v # n = v <> "_" <> fromString (show n)
 
 instance Show Variable where
   show (Name s) = s
