@@ -15,4 +15,5 @@ tests =
   [ testGroup "ProgramRep: Edits" PRep.unitPropertyBasedEdits
   , testGroup "ProgramRep: Expr printer" PRep.unitExprPrettyPrint
   , testGroup "Logic: Weakest Precondition" L.unitWP
+  , testGroup "Logic: Formula Properties" L.formProperties
   ]
