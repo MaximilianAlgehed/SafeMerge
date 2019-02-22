@@ -20,7 +20,7 @@ data Formula where
   (:=:) :: Expr    -> Expr    -> Formula
   (:>)  :: Expr    -> Expr    -> Formula
   FNot  :: Formula -> Formula
-  deriving (Data, Typeable)
+  deriving (Data, Typeable, Eq)
 
 instance Show Formula where
   showsPrec p f = case f of

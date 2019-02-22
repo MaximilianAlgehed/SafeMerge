@@ -45,7 +45,8 @@ library
 
 library TestCode
   exposed-modules:
-    ProgramRepTests
+      ProgramRepTests
+    , LogicTests
   hs-source-dirs:
     test/deps
   build-depends:
