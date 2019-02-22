@@ -5,6 +5,70 @@ import Logic
 import ProgramRep
 
 import qualified Data.Set as S
+import Data.SBV hiding ((#))
+import Data.SBV.Control hiding (Name)
+import qualified Data.Map as M
+import Control.Monad.Trans
+import Data.List
+
+data HoareTriple = Hoare { precondition  :: Formula
+                         , program       :: Statement
+                         , postcondition :: Formula }
+
+instance Show HoareTriple where
+  show h = "{"
+         ++ show (precondition h)
+         ++ "}\n"
+         ++ show (program h)
+         ++ "{"
+         ++ show (postcondition h)
+         ++ "}"
+
+exprToSInteger :: M.Map Variable SInteger -> Expr -> Maybe SInteger
+exprToSInteger env = go
+  where
+    go e = case e of
+      Var v     -> M.lookup v env
+      Lit i     -> return . literal $ toInteger i
+      e0 :+: e1 -> (+) <$> go e0 <*> go e1
+      e0 :-: e1 -> (-) <$> go e0 <*> go e1
+
+formulaToSBool :: M.Map Variable SInteger -> Formula -> Maybe SBool
+formulaToSBool env = go
+  where
+    go f = case f of
+      e0 :=: e1 -> (.==) <$> exprToSInteger env e0 <*> exprToSInteger env e1
+      e0 :>  e1 -> (.>)  <$> exprToSInteger env e0 <*> exprToSInteger env e1
+      f0 :&  f1 -> (.&&) <$> go f0 <*> go f1
+      f0 :|  f1 -> (.||) <$> go f0 <*> go f1
+      f0 :-> f1 -> (.=>) <$> go f0 <*> go f1
+      FNot f'   -> sNot  <$> go f'
+
+vc :: HoareTriple -> Maybe Formula
+vc h = do
+  weakestPrecondition <- wp (program h) (postcondition h)
+  return $ precondition h :-> weakestPrecondition
+
+verify :: HoareTriple -> IO ()
+verify h = runSMT $ do
+  case vc h of
+    Nothing -> lift $ putStrLn "Error!"
+    Just f  -> do
+      let vs = S.toList $ formulaVars f
+      svs <- sequence [ free n | Name n <- vs ]
+      let env = M.fromList $ zip vs svs
+      case formulaToSBool env f of
+        Nothing -> lift $ putStrLn "Error!"
+        Just sb -> do
+          constrain $ sNot sb
+          query $ do
+            cs <- checkSat
+            case cs of
+              Unk   -> lift $ putStrLn "Error!"
+              Unsat -> lift $ putStrLn "Verified!"
+              Sat   -> do
+                vals <- sequence [ getValue sv | sv <- svs ]
+                lift . putStrLn $ "Counterexample: {" ++ intercalate ", " [ n ++ " := " ++ show v | (Name n, v) <- zip vs vals ] ++ "}"
 
 programEquivalence :: Statement -> Statement -> [Variable] -> HoareTriple
 programEquivalence p0 p1 outputs =
