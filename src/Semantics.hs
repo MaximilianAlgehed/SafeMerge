@@ -4,6 +4,7 @@ module Semantics where
 import qualified Data.Map as M
 
 import ProgramRep
+import Logic
 
 type Env = M.Map Variable Int
 
@@ -20,6 +21,15 @@ condSem env c = case c of
   e0 :>:  e1 -> (>)  <$> exprSem env e0 <*> exprSem env e1
   e0 :==: e1 -> (==) <$> exprSem env e0 <*> exprSem env e1
   CNot c'    -> not  <$> condSem env c'
+
+formSem :: Env -> Formula -> Maybe Bool
+formSem env f = case f of
+  f0 :& f1  -> (&&)       <$> formSem env f0 <*> formSem env f1
+  f0 :| f1  -> (||)       <$> formSem env f0 <*> formSem env f1
+  f0 :-> f1 -> (||) . not <$> formSem env f0 <*> formSem env f1
+  e0 :=: e1 -> (==)       <$> exprSem env e0 <*> exprSem env e1
+  e0 :>  e1 -> (>)        <$> exprSem env e0 <*> exprSem env e1
+  FNot f'   -> not        <$> formSem env f'
 
 stmtSem :: Env -> Statement -> Maybe Env
 stmtSem env s = case s of
