@@ -15,6 +15,8 @@ import Semantics
 
 import ProgramRepTests -- To get the instances
 
+-- | Check that the semantics of conditions are preserved when translating
+-- them to formulas
 prop_cond_form_sem :: Condition -> Env -> Bool
 prop_cond_form_sem c env = condSem env c == formSem env (conditionToFormula c)
 
@@ -23,6 +25,8 @@ formProperties =
   [ testProperty "prop_cond_form_sem"  prop_cond_form_sem
   ]
 
+-- | Check that weakest precondition works as we expect for
+-- simple test cases
 unitWP :: [Test]
 unitWP = [ testCase "x := 1 + 1"     $ wp ("x" := 1 + 1)            ("x" === 2)   @=? (Just $ 1 + 1 === 2)
          , testCase "x := 1; y := x" $ wp (do "x" := 1; "y" := "x") ("x" === "y") @=? (Just $ 1 === 1)
