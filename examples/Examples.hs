@@ -55,3 +55,27 @@ run_e42 :: IO ()
 run_e42 = do
   let Just ht = mergeCandidateHoareTriple e42_S e42_Delta_O e42_Delta_A e42_Delta_B e42_Delta_M ["x"]
   verify ht
+
+{- Example from talk -}
+ex_talk :: Statement
+ex_talk = do
+  hole
+  hole
+  "output" := "x" + "y"
+
+ex_talk_Delta_O, ex_talk_Delta_A, ex_talk_Delta_B, ex_talk_Delta_M, ex_talk_Delta_M' :: Edit
+ex_talk_Delta_O  = [skip, skip]
+ex_talk_Delta_A  = ["x" := "x" + 1, skip]
+ex_talk_Delta_B  = [skip, "y" := "y" + 1]
+ex_talk_Delta_M  = ["x" := "x" + 1, "y" := "y" + 1]
+ex_talk_Delta_M' = [skip, "y" := "y" + 1]
+
+run_ex_talk_1 :: IO ()
+run_ex_talk_1 = do
+  let Just ht = mergeCandidateHoareTriple ex_talk ex_talk_Delta_O ex_talk_Delta_A ex_talk_Delta_B ex_talk_Delta_M ["output"]
+  verify ht
+
+run_ex_talk_2 :: IO ()
+run_ex_talk_2 = do
+  let Just ht = mergeCandidateHoareTriple ex_talk ex_talk_Delta_O ex_talk_Delta_A ex_talk_Delta_B ex_talk_Delta_M' ["output"]
+  verify ht
